@@ -1,0 +1,7 @@
+192.0.2.1 - - [05/Oct/2026:09:00:00 -0500] "GET / HTTP/1.1" 200 1024 "-" "SyntheticBrowser/1.0"
+192.0.2.2 - - [05/Oct/2026:09:05:00 -0500] "GET /jobs?utm_source=demo HTTP/1.1" 200 512 "-" "SyntheticBrowser/1.0"
+192.0.2.3 - - [05/Oct/2026:09:10:00 -0500] "GET /missing HTTP/1.1" 404 128 "-" "SyntheticBrowser/1.0"
+192.0.2.1 - - [05/Oct/2026:10:00:00 -0500] "POST /api/applications HTTP/1.1" 500 64 "-" "SyntheticBrowser/1.0"
+192.0.2.2 - - [05/Oct/2026:10:15:00 -0500] "GET /jobs?token=demo-only HTTP/1.1" 200 512 "-" "SyntheticBrowser/1.0"
+192.0.2.3 - - [05/Oct/2026:10:20:00 -0500] "GET /health HTTP/1.1" 204 - "-" "SyntheticBrowser/1.0"
+This deliberately malformed synthetic line should be skipped.
