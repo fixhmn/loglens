@@ -30,6 +30,18 @@ The archive is streamed through the same parser, without unpacking it to disk or
 
 Existing output files are never replaced. Choose a new output name to rerun. An input with no valid entries exits with an error instead of producing a misleading empty report.
 
+## JSON for scripts
+
+```powershell
+python -m loglens analyze examples/access.txt --format json --output output/summary.json
+```
+
+JSON output includes `schema_version: 1`, request/byte totals, skipped/oversized line counts,
+status counts, top paths, error paths, and UTC hourly counts. `--top` applies to path lists,
+not to statuses or hours. Without `--output`, defaults are `output/report.html` or
+`output/report.json` according to the selected format. Gzip input works with either format.
+The same privacy omissions and no-overwrite behavior apply; paths may still be sensitive.
+
 ## What's in the report
 
 - Total valid requests, skipped lines, oversized lines, and response bytes
@@ -57,4 +69,4 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m ruff format --check .
 ```
 
-GitHub Actions runs tests and Ruff on Python 3.11 and 3.12. Next useful improvements: status filters and an optional JSON summary. Real Nginx integration hasn't been verified yet.
+GitHub Actions runs tests and Ruff on Python 3.11 and 3.12. A next useful improvement is status filters. Real Nginx integration hasn't been verified yet.

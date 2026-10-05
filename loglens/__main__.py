@@ -4,7 +4,7 @@ import zlib
 from pathlib import Path
 
 from loglens.analyze import analyze
-from loglens.report import render
+from loglens.report import render, render_json
 
 
 def top_count(value):
@@ -17,11 +17,13 @@ def top_count(value):
 def main(argv=None):
     parser = argparse.ArgumentParser(description="Analyze Nginx combined logs locally.")
     subcommands = parser.add_subparsers(dest="command", required=True)
-    command = subcommands.add_parser("analyze", help="Build an HTML report")
+    command = subcommands.add_parser("analyze", help="Build an HTML or JSON report")
     command.add_argument("input", type=Path, help="Combined log file, plain text or .gz")
-    command.add_argument("--output", type=Path, default=Path("output/report.html"))
+    command.add_argument("--output", type=Path, help="New report path; never overwritten")
+    command.add_argument("--format", choices=("html", "json"), default="html")
     command.add_argument("--top", type=top_count, default=10)
     args = parser.parse_args(argv)
+    args.output = args.output or Path(f"output/report.{args.format}")
     try:
         if args.input.suffix.lower() == ".gz":
             stream = gzip.open(args.input, "rt", encoding="utf-8", errors="replace")
@@ -33,7 +35,9 @@ def main(argv=None):
             parser.exit(
                 1, f"No valid combined-log entries found; skipped {summary.skipped} lines.\n"
             )
-        report = render(summary, args.top)
+        report = (
+            render_json(summary, args.top) if args.format == "json" else render(summary, args.top)
+        )
         args.output.parent.mkdir(parents=True, exist_ok=True)
         with args.output.open("x", encoding="utf-8") as file:
             file.write(report)

@@ -1,4 +1,33 @@
+import json
 from html import escape
+
+
+def render_json(summary, top=10):
+    """A versioned summary for scripts, with the same omissions as the HTML report."""
+    return (
+        json.dumps(
+            {
+                "schema_version": 1,
+                "valid_requests": summary.valid,
+                "skipped_lines": summary.skipped,
+                "oversized_lines": summary.oversized,
+                "response_bytes": summary.bytes_sent,
+                "statuses": {str(key): value for key, value in sorted(summary.statuses.items())},
+                "top_paths": [
+                    {"path": path, "requests": count}
+                    for path, count in summary.paths.most_common(top)
+                ],
+                "top_error_paths": [
+                    {"path": path, "errors": count}
+                    for path, count in summary.errors.most_common(top)
+                ],
+                "hours_utc": dict(sorted(summary.hours.items())),
+            },
+            indent=2,
+            ensure_ascii=False,
+        )
+        + "\n"
+    )
 
 
 def table(title, headings, rows):
