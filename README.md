@@ -20,6 +20,14 @@ For your own combined log:
 python -m loglens analyze C:/private/access.log --top 20 --output output/report.html
 ```
 
+Rotated gzip logs work directly too; `.gz` matching is case-insensitive:
+
+```powershell
+python -m loglens analyze C:/private/access.log.1.gz --output output/archive-report.html
+```
+
+The archive is streamed through the same parser, without unpacking it to disk or changing the input. Invalid or truncated gzip archives fail before a report is created. The existing per-line and distinct-key limits still apply to decompressed text. There is no total decompressed-size or runtime limit, so use trusted local files, not arbitrary uploaded archives.
+
 Existing output files are never replaced. Choose a new output name to rerun. An input with no valid entries exits with an error instead of producing a misleading empty report.
 
 ## What's in the report
@@ -37,7 +45,7 @@ The parser and aggregation are separate from HTML rendering and the CLI. HTML va
 
 Input is read in bounded chunks, with a 65,536-character line limit. Oversized entries are skipped once, not counted as multiple entries. Counters store unique paths and hours; analysis stops beyond 50,000 of either, rather than growing indefinitely. This isn't a constant-memory analyzer.
 
-Only combined-format logs are supported, including quoted escaped characters in referrer/user-agent fields. Custom formats, JSON logs, compressed files, request timing, and live tailing aren't supported. Timezones come from each entry; hour rows include dates, and hours without traffic are omitted. A `-` response size counts as zero. Results describe the provided file, not necessarily a whole day or unique visitors.
+Only combined-format logs are supported, including quoted escaped characters in referrer/user-agent fields. Plain text and gzip inputs are supported; custom formats, JSON logs, other compression formats, request timing, and live tailing aren't. Timezones come from each entry; hour rows include dates, and hours without traffic are omitted. A `-` response size counts as zero. Results describe the provided file, not necessarily a whole day or unique visitors.
 
 ## Development
 
@@ -49,4 +57,4 @@ python -m venv .venv
 .\.venv\Scripts\python.exe -m ruff format --check .
 ```
 
-GitHub Actions runs tests and Ruff on Python 3.11 and 3.12. Next useful improvements: gzip input, status filters, and an optional JSON summary. Real Nginx integration hasn't been verified yet.
+GitHub Actions runs tests and Ruff on Python 3.11 and 3.12. Next useful improvements: status filters and an optional JSON summary. Real Nginx integration hasn't been verified yet.

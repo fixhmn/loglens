@@ -1,3 +1,4 @@
+import gzip
 import io
 from datetime import UTC, datetime
 from pathlib import Path
@@ -84,6 +85,55 @@ def test_cli_empty_input_does_not_create_report(tmp_path):
         main(["analyze", __file__, "--output", str(output)])
     assert error.value.code == 1
     assert not output.exists()
+
+
+def test_cli_gzip_matches_plain_report_and_keeps_input(tmp_path):
+    text = entry() + entry(status=500) + "broken\n"
+    plain = tmp_path / "access.txt"
+    compressed = tmp_path / "access.log.gz"
+    plain.write_text(text, encoding="utf-8")
+    original = gzip.compress(text.encode("utf-8"))
+    compressed.write_bytes(original)
+    plain_report = tmp_path / "plain.html"
+    gzip_report = tmp_path / "compressed.html"
+    main(["analyze", str(plain), "--output", str(plain_report)])
+    main(["analyze", str(compressed), "--output", str(gzip_report)])
+    assert gzip_report.read_bytes() == plain_report.read_bytes()
+    assert compressed.read_bytes() == original
+    assert "secret" not in gzip_report.read_text(encoding="utf-8")
+
+
+@pytest.mark.parametrize("payload", [b"not a gzip archive", gzip.compress(entry().encode())[:-8]])
+def test_cli_bad_gzip_has_clear_error_and_no_partial_report(tmp_path, capsys, payload):
+    compressed = tmp_path / "broken.gz"
+    compressed.write_bytes(payload)
+    output = tmp_path / "report.html"
+    with pytest.raises(SystemExit) as error:
+        main(["analyze", str(compressed), "--output", str(output)])
+    assert error.value.code == 1
+    assert "archive integrity" in capsys.readouterr().err
+    assert not output.exists()
+
+
+def test_cli_empty_gzip_does_not_create_report(tmp_path):
+    compressed = tmp_path / "empty.gz"
+    compressed.write_bytes(gzip.compress(b""))
+    output = tmp_path / "report.html"
+    with pytest.raises(SystemExit) as error:
+        main(["analyze", str(compressed), "--output", str(output)])
+    assert error.value.code == 1
+    assert not output.exists()
+
+
+def test_cli_gzip_keeps_oversized_line_limit(tmp_path):
+    compressed = tmp_path / "access.GZ"
+    text = "x" * (MAX_LINE * 3) + "\n" + entry()
+    compressed.write_bytes(gzip.compress(text.encode("utf-8")))
+    output = tmp_path / "report.html"
+    main(["analyze", str(compressed), "--output", str(output)])
+    report = output.read_text(encoding="utf-8")
+    assert "1 valid requests" in report
+    assert "x" * 100 not in report
 
 
 @pytest.mark.parametrize("top", ["0", "101", "wrong"])
