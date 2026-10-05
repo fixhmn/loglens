@@ -10,7 +10,10 @@ from loglens.report import render_json
 
 
 def log(path, status=200):
-    return f'192.0.2.1 - - [05/Oct/2026:09:00:00 -0500] "GET {path} HTTP/1.1" {status} 10 "-" "Browser"\n'
+    return (
+        "192.0.2.1 - - [05/Oct/2026:09:00:00 -0500] "
+        f'"GET {path} HTTP/1.1" {status} 10 "-" "Browser"\n'
+    )
 
 
 def test_json_schema_privacy_and_top_limit():
